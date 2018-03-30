@@ -41,10 +41,10 @@ sudo install -m 0755 narcissist-cli/narcissist-cli /usr/local/bin/narcissist-cli
 $ narcissist-cli -B -p 123
 Private: 2B48614E3CF6BFD713E84573B3420BC10B2A2B0CE9C17CEF003D1D1ADDD9DF52
 Address: 123QHaY2YaVpfBZBsw45qxfUXgwPs22fiE
+    WIF: Kxfr56YJ5qa3JJeVuMD3aumkjdSdTbfAiTksHgwqsfWFZzbTA9ot
 ```
 
 #### Getting an untrusted party to generate a P2PKH address for you
-
 (on your machine)
 
 ```
@@ -72,14 +72,15 @@ $ narcissist-cli -C \
  Public: 0317080825954A4EC067098AF24262ED12245BF6D9B6A9B6919EDA5B37FDBC4E94
 Private: 8EF09A007974CE77699A0ED5CEFCECEFDD5A572966E324C809D06BAB26667201
 Address: 123w8fcpdpxKMnWyVYbyV7BEQQNCAom9eP
+    WIF: L21ZrZ1h7M4iwrfqQFM74zAEv1RnuYXjdEYUxdsnXN5U7ZFmTD98
 ```
 
 #### Importing the private key into Electrum
-Electrum doesn't allow you to import the raw ECDSA key, it expects them in the 'Wallet Import Format'.
+Create a new Electrum wallet and choose `Import Bitcoin addresses or private keys`,
+paste the WIF you got out of `narcissist-cli`.
 
-You can encode the ECDSA key outputted by this program into the wallet import format with [bitaddress.org](https://bitaddress.org). Navigate to the webpage, click on 'Wallet Details' and paste your private key into the box and click View Details. The key is presented in the proper format at the bottom of the page.
-
-Narcissist will have the option to export WIF keys in the future.
+Add the address to an existing wallet by navigating to `Wallet -> Private keys -> import`
+and pasting the WIF into the popup.
 
 ## License
 Released under the terms of the 3-Clause BSD license. See `LICENSE.txt` for more

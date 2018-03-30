@@ -11,6 +11,7 @@
 #include <cryptopp/secblock.h>
 #include <narcissist/bitcoin.hpp>
 #include <narcissist/narcissist.hpp>
+#include <narcissist/wif.hpp>
 #include <secp256k1.h>
 
 namespace po = boost::program_options;
@@ -181,6 +182,13 @@ int main(int argc, char **argv) {
 		std::cout << (vm.count("split-public-key") ? "  Tweak: " : "Private: ") << secretHex << std::endl;
 		std::cout << "Address: " << address << std::endl;
 
+		if (!vm.count("split-public-key"))
+		{
+			char wif[64] = { 0 };
+			Narcissist::ecdsa_to_wif(wif, 0x80, secret);
+			std::cout << "    WIF: " << wif << std::endl;
+		}
+
 		goto exit;
 	}
 	else if (vm.count("combine-split-key"))
@@ -214,7 +222,9 @@ int main(int argc, char **argv) {
 			&serialized_pubkey_length, &pubkey, SECP256K1_EC_COMPRESSED);
 
 		char address[64] = { 0 };
+		char wif[64] = { 0 };
 		Narcissist::derive_p2pkh(&pubkey, address, nullptr, 0x00);
+		Narcissist::ecdsa_to_wif(wif, 0x80, privateKey);
 
 		std::string publicHex, privateHex;
 
@@ -228,6 +238,7 @@ int main(int argc, char **argv) {
 		std::cout << " Public: " << publicHex << std::endl;
 		std::cout << "Private: " << privateHex << std::endl;
 		std::cout << "Address: " << address << std::endl;
+		std::cout << "    WIF: " << wif << std::endl;
 	}
 
 exit:
