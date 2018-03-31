@@ -7,6 +7,7 @@
 #include <narcissist/bitcoin.hpp>
 
 #include <narcissist/base58.h>
+#include <narcissist/bech32.h>
 #include <narcissist/narcissist.hpp>
 
 static CryptoPP::SHA256 sha256;
@@ -55,4 +56,23 @@ void Narcissist::derive_p2pkh(secp256k1_pubkey *pubkey, char *address,
 	// base58 encoding
 	base58enc(address, address_length, addr,
 		CryptoPP::RIPEMD160::DIGESTSIZE + 5);
+}
+
+void Narcissist::derive_bech32(secp256k1_pubkey *pubkey, char *address,
+	size_t *address_length, bool testnet)
+{
+	// serialize address
+	byte serialized_pubkey[33];
+	size_t serialized_pubkey_length = 33;
+	secp256k1_ec_pubkey_serialize(secp256k1ctx, serialized_pubkey,
+		&serialized_pubkey_length, pubkey, SECP256K1_EC_COMPRESSED);
+
+	// only first four bytes of this are used
+	byte checksum[CryptoPP::SHA256::DIGESTSIZE];
+
+	// network + hash160 + 4 bytes of sha256d
+	byte addr[CryptoPP::RIPEMD160::DIGESTSIZE] = { 0 };
+	hash160(addr, serialized_pubkey, serialized_pubkey_length);
+
+	segwit_addr_encode(address, testnet ? "tc" : "bc", 1, addr, CryptoPP::RIPEMD160::DIGESTSIZE);
 }

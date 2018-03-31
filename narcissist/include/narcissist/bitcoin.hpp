@@ -5,4 +5,6 @@
 namespace Narcissist {
 	void derive_p2pkh(secp256k1_pubkey *pubkey, char *address,
 		size_t *address_length, char network);
+	void derive_bech32(secp256k1_pubkey *pubkey, char *address,
+		size_t *address_length, bool testnet);
 }
