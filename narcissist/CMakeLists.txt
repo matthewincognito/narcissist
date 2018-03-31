@@ -3,6 +3,7 @@ find_package(secp256k1 REQUIRED)
 
 add_library(narcissist
 	base58.c
+	bech32.c
 	bitcoin.cpp
 	narcissist.cpp
 	wif.cpp)

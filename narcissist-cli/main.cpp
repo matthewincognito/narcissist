@@ -18,6 +18,12 @@ namespace po = boost::program_options;
 
 using Narcissist::secp256k1ctx;
 
+enum AddressType
+{
+	BECH32_P2WKH,
+	P2PKH
+};
+
 static CryptoPP::SecByteBlock parse_privkey_hex (const std::string encoded)
 {
 	CryptoPP::SecByteBlock decoded;
@@ -59,8 +65,37 @@ static secp256k1_pubkey parse_pubkey_hex(const std::string encoded)
 	return pubkey;
 }
 
+static byte get_wif_prefix(AddressType type)
+{
+	switch (type)
+	{
+		case BECH32_P2WKH:
+			return 129;
+		case P2PKH:
+			return 128;
+		default:
+			throw std::runtime_error("Unknown address type");
+	}
+}
+
+static void derive_address(AddressType type, secp256k1_pubkey *pubkey, char *address)
+{
+	switch (type)
+	{
+		case BECH32_P2WKH:
+			Narcissist::derive_bech32(pubkey, address, nullptr, false);
+			break;
+		case P2PKH:
+			Narcissist::derive_p2pkh(pubkey, address, nullptr, 0x00);
+			break;
+		default:
+			throw std::runtime_error("Unknown address type");
+	}
+}
+
 int main(int argc, char **argv) {
 	Narcissist::setup();
+	AddressType addressType = BECH32_P2WKH;
 
 	po::options_description desc("Allowed options");
 
@@ -72,11 +107,25 @@ int main(int argc, char **argv) {
 		("brute-address-prefix,p", po::value<std::string>(), "prefix for bruteforcing")
 		("split-public-key,P", po::value<std::string>(), "public key, for split-key usage")
 		("split-private-key,i", po::value<std::string>(), "private key, for split-key usage")
+		("address-type,T", po::value<std::string>()->default_value("bech32-p2wkh"), "p2pkh or bech32-p2wkh")
 	;
 
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
 	po::notify(vm);
+
+	if (vm.count("address-type"))
+	{
+		std::string choice = vm["address-type"].as<std::string>();
+		if (choice == "bech32-p2wkh")
+		{
+			addressType = BECH32_P2WKH;
+		}
+		else if (choice == "p2pkh")
+		{
+			addressType = P2PKH;
+		}
+	}
 
 	if (vm.count("help") || argc == 1)
 	{
@@ -133,7 +182,7 @@ int main(int argc, char **argv) {
 		if (vm.count("split-public-key"))
 		{
 			secp256k1_pubkey pubkey = parse_pubkey_hex(vm["split-public-key"].as<std::string>());
-			generate_address = [pubkey](const CryptoPP::SecByteBlock secret, char *address) -> void {
+			generate_address = [addressType, pubkey](const CryptoPP::SecByteBlock secret, char *address) -> void {
 				secp256k1_pubkey tweakedkey = pubkey;
 
 				if (!secp256k1_ec_pubkey_tweak_mul(secp256k1ctx, &tweakedkey, secret.data()))
@@ -142,12 +191,12 @@ int main(int argc, char **argv) {
 					throw std::runtime_error("Tweak out of range");
 				}
 
-				Narcissist::derive_p2pkh(&tweakedkey, address, nullptr, 0x00);
+				derive_address(addressType, &tweakedkey, address);
 			};
 		}
 		else
 		{
-			generate_address = [](const CryptoPP::SecByteBlock secret, char *address) -> void {
+			generate_address = [addressType](const CryptoPP::SecByteBlock secret, char *address) -> void {
 				secp256k1_pubkey pubkey;
 
 				if (!secp256k1_ec_pubkey_create(secp256k1ctx, &pubkey,
@@ -156,7 +205,7 @@ int main(int argc, char **argv) {
 					throw std::runtime_error("Failed to derive public key from private key");
 				}
 
-				Narcissist::derive_p2pkh(&pubkey, address, nullptr, 0x00);
+				derive_address(addressType, &pubkey, address);
 			};
 		}
 
@@ -185,7 +234,7 @@ int main(int argc, char **argv) {
 		if (!vm.count("split-public-key"))
 		{
 			char wif[64] = { 0 };
-			Narcissist::ecdsa_to_wif(wif, 0x80, secret);
+			Narcissist::ecdsa_to_wif(wif, get_wif_prefix(addressType), secret);
 			std::cout << "    WIF: " << wif << std::endl;
 		}
 
@@ -223,8 +272,8 @@ int main(int argc, char **argv) {
 
 		char address[64] = { 0 };
 		char wif[64] = { 0 };
-		Narcissist::derive_p2pkh(&pubkey, address, nullptr, 0x00);
-		Narcissist::ecdsa_to_wif(wif, 0x80, privateKey);
+		derive_address(addressType, &pubkey, address);
+		Narcissist::ecdsa_to_wif(wif, get_wif_prefix(addressType), privateKey);
 
 		std::string publicHex, privateHex;
 
