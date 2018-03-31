@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <string>
 
 #include <secp256k1.h>
@@ -13,16 +14,16 @@
 static CryptoPP::SHA256 sha256;
 static CryptoPP::RIPEMD160 ripemd160;
 
-static inline void hash160(byte *out, const byte *in, size_t in_length)
+static inline void hash160(uint8_t *out, const uint8_t *in, size_t in_length)
 {
 	// ripemd160(sha256(x))
 
-	byte sha256digest[CryptoPP::SHA256::DIGESTSIZE];
+	uint8_t sha256digest[CryptoPP::SHA256::DIGESTSIZE];
 	sha256.CalculateDigest(sha256digest, in, in_length);
 	ripemd160.CalculateDigest(out, sha256digest, CryptoPP::SHA256::DIGESTSIZE);
 }
 
-static inline void sha256d(byte *out, const byte *in, size_t in_length)
+static inline void sha256d(uint8_t *out, const uint8_t *in, size_t in_length)
 {
 	// sha256(sha256(x))
 
@@ -34,16 +35,16 @@ void Narcissist::derive_p2pkh(secp256k1_pubkey *pubkey, char *address,
 	size_t *address_length, char network = 0x00)
 {
 	// serialize address
-	byte serialized_pubkey[33];
+	uint8_t serialized_pubkey[33];
 	size_t serialized_pubkey_length = 33;
 	secp256k1_ec_pubkey_serialize(secp256k1ctx, serialized_pubkey,
 		&serialized_pubkey_length, pubkey, SECP256K1_EC_COMPRESSED);
 
 	// only first four bytes of this are used
-	byte checksum[CryptoPP::SHA256::DIGESTSIZE];
+	uint8_t checksum[CryptoPP::SHA256::DIGESTSIZE];
 
 	// network + hash160 + 4 bytes of sha256d
-	byte addr[CryptoPP::RIPEMD160::DIGESTSIZE + 5] = { 0 };
+	uint8_t addr[CryptoPP::RIPEMD160::DIGESTSIZE + 5] = { 0 };
 	hash160(addr + 1, serialized_pubkey, serialized_pubkey_length);
 	addr[0] = network;
 
@@ -62,16 +63,16 @@ void Narcissist::derive_bech32(secp256k1_pubkey *pubkey, char *address,
 	size_t *address_length, bool testnet)
 {
 	// serialize address
-	byte serialized_pubkey[33];
+	uint8_t serialized_pubkey[33];
 	size_t serialized_pubkey_length = 33;
 	secp256k1_ec_pubkey_serialize(secp256k1ctx, serialized_pubkey,
 		&serialized_pubkey_length, pubkey, SECP256K1_EC_COMPRESSED);
 
 	// only first four bytes of this are used
-	byte checksum[CryptoPP::SHA256::DIGESTSIZE];
+	uint8_t checksum[CryptoPP::SHA256::DIGESTSIZE];
 
 	// network + hash160 + 4 bytes of sha256d
-	byte addr[CryptoPP::RIPEMD160::DIGESTSIZE] = { 0 };
+	uint8_t addr[CryptoPP::RIPEMD160::DIGESTSIZE] = { 0 };
 	hash160(addr, serialized_pubkey, serialized_pubkey_length);
 
 	segwit_addr_encode(address, testnet ? "tc" : "bc", 1, addr, CryptoPP::RIPEMD160::DIGESTSIZE);

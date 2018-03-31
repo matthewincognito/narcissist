@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <exception>
 
 #include <cryptopp/osrng.h>
@@ -12,7 +13,7 @@ void Narcissist::setup()
 	secp256k1ctx =
 		secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 
-	byte seed[32];
+	uint8_t seed[32];
 	CryptoPP::OS_GenerateRandomBlock(false, seed, 32);
 	if (!secp256k1_context_randomize(secp256k1ctx, seed))
 	{

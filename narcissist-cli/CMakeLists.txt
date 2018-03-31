@@ -9,7 +9,8 @@ target_link_libraries(narcissist-cli
 	narcissist
 	${Boost_LIBRARIES}
 	${CRYPTOPP_LIBRARIES}
-	${SECP256K1_LIBRARIES})
+	${SECP256K1_LIBRARIES}
+	gmp)
 target_include_directories(narcissist-cli
 	PRIVATE
 	${Boost_INCLUDE_DIR}

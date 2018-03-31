@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <exception>
 #include <iostream>
 #include <string>
@@ -29,14 +30,14 @@ static CryptoPP::SecByteBlock parse_privkey_hex (const std::string encoded)
 	CryptoPP::SecByteBlock decoded;
 	CryptoPP::HexDecoder decoder;
 
-	decoder.Put((byte* ) encoded.data(), encoded.size());
+	decoder.Put((uint8_t *) encoded.data(), encoded.size());
 	decoder.MessageEnd();
 
 	size_t size = decoder.MaxRetrievable();
 	if (size && size <= SIZE_MAX)
 	{
 		decoded.New(size);
-		decoder.Get(reinterpret_cast<byte *>(decoded.data()), decoded.size());
+		decoder.Get(reinterpret_cast<uint8_t *>(decoded.data()), decoded.size());
 	}
 
 	return decoded;
@@ -48,13 +49,13 @@ static secp256k1_pubkey parse_pubkey_hex(const std::string encoded)
 	secp256k1_pubkey pubkey;
 
 	CryptoPP::HexDecoder decoder;
-	decoder.Put((byte* ) encoded.data(), encoded.size());
+	decoder.Put((uint8_t* ) encoded.data(), encoded.size());
 	decoder.MessageEnd();
 	size_t size = decoder.MaxRetrievable();
 	if (size && size <= SIZE_MAX)
 	{
 		decoded.resize(size);
-		decoder.Get(reinterpret_cast<byte *>(&decoded[0]), decoded.size());
+		decoder.Get(reinterpret_cast<uint8_t *>(&decoded[0]), decoded.size());
 	}
 
 	if (!secp256k1_ec_pubkey_parse(secp256k1ctx, &pubkey, reinterpret_cast<const unsigned char*>(decoded.data()), 33))
@@ -65,7 +66,7 @@ static secp256k1_pubkey parse_pubkey_hex(const std::string encoded)
 	return pubkey;
 }
 
-static byte get_wif_prefix(AddressType type)
+static uint8_t get_wif_prefix(AddressType type)
 {
 	switch (type)
 	{
@@ -144,7 +145,7 @@ int main(int argc, char **argv) {
 			throw std::runtime_error("Failed to derive public key from private key");
 		}
 
-		byte serialized_pubkey[33];
+		uint8_t serialized_pubkey[33];
 		size_t serialized_pubkey_length = 33;
 		secp256k1_ec_pubkey_serialize(secp256k1ctx, serialized_pubkey,
 			&serialized_pubkey_length, &pubkey, SECP256K1_EC_COMPRESSED);
@@ -265,7 +266,7 @@ int main(int argc, char **argv) {
 			throw std::runtime_error("Failed to derive public key from private key");
 		}
 
-		byte serialized_pubkey[33];
+		uint8_t serialized_pubkey[33];
 		size_t serialized_pubkey_length = 33;
 		secp256k1_ec_pubkey_serialize(secp256k1ctx, serialized_pubkey,
 			&serialized_pubkey_length, &pubkey, SECP256K1_EC_COMPRESSED);
